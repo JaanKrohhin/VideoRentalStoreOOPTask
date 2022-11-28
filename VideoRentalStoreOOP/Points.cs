@@ -10,22 +10,28 @@ namespace VideoRentalStoreOOP
     public static class Points
     {
         public static int Bonus_points = 52;
+
+        public const int PointsForAFreeRental = 25;
+
+        public const int PointsAcquiredOnNewReleaseRental = 2;
+
+        public const int PointsAcquiredOnRegularRental = 1;
         public static int FreeRentDays
         { 
             get
             {
-                return Bonus_points / 25;
+                return Bonus_points / PointsForAFreeRental;
             } 
         }
         public static void AddPoints(Film film)
         {
             if (film.Rental_Type_ == Rental_Type.New_Release)
             {
-                Bonus_points += 2;
+                Bonus_points += PointsAcquiredOnNewReleaseRental;
             }
             else
             {
-                Bonus_points++;
+                Bonus_points += PointsAcquiredOnRegularRental;
             }
         }
         public static void RemainingPoints()

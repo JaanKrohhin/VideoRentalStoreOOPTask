@@ -14,15 +14,28 @@ namespace VideoRentalStoreOOP
         public Inventory()
         {
             Films = new List<Film>{
+
                 new Film("The Godfather",Rental_Type.New_Release, 3, 0),
                 new Film("How to Train Your Dragon", Rental_Type.New_Release, 3, 0),
                 new Film("The Martian", Rental_Type.Regular_Rental, 3, 0),
                 new Film("Doctor Strange", Rental_Type.Regular_Rental, 3, 0),
                 new Film("The Dark Knight", Rental_Type.Old_Film, 3, 0),
-                new Film("The Matrix", Rental_Type.Old_Film, 3, 2),
-                new Film("The Avengers", Rental_Type.Old_Film, 0, 0),
-                new Film("Spider-man", Rental_Type.Regular_Rental, 30, 1),
-                new Film("Up", Rental_Type.New_Release, 0, 0),
+                new Film("The Matrix", Rental_Type.Old_Film, 3, 30),
+                new Film("Spider-man", Rental_Type.Regular_Rental, 30, 12),
+
+                //Films that are not rented right now
+                new Film("The Avengers", Rental_Type.Old_Film),
+                new Film("Up", Rental_Type.New_Release),
+                new Film("Aladdin", Rental_Type.New_Release),
+                new Film("Alien", Rental_Type.New_Release),
+                new Film("Alien 3", Rental_Type.New_Release),
+                new Film("Aliens", Rental_Type.New_Release),
+                new Film("Top Gun", Rental_Type.New_Release),
+                new Film("Thor", Rental_Type.New_Release),
+                new Film("Thor: Ragnarok", Rental_Type.New_Release),
+                new Film("Toy Story", Rental_Type.New_Release),
+                new Film("Venom", Rental_Type.New_Release),
+                new Film("Transformers", Rental_Type.New_Release),
             };
         }
         #region Add, Remove, Change films
@@ -133,13 +146,43 @@ namespace VideoRentalStoreOOP
             }
 
         }
+        public void MakeFilmOverdue()
+        {
+            if (Films.Count > 0)
+            {
+                Console.WriteLine("Which film do you wanna change?");
+            }
+            while (true)
+            {
+                if (Films.Count < 1)
+                {
+                    Console.WriteLine("Our inventory is empty.");
+                    return;
+                }
+                ShowAllFilms(true);
+                int movieId = Menus.GetNumberFromUser("Type the number of the film to change it. Type 0 to exit selection", max: Films.Count, min: 0) - 1;
+                if (movieId == -1)
+                {
+                    break;
+                }
+                else
+                {
+                    var days = Menus.GetNumberFromUser($"How many days is it overdue? Type in the number of days", max: Int32.MaxValue);
+                    movieId = Films.IndexOf(Films.ElementAt(movieId));
+                    Films[movieId].DaysOverdue = days;
+                    Console.WriteLine("Success");
+                }
+
+            }
+
+        }
 
         #endregion
 
         #region Rent, Rent with points
         public void RentFilms()
         {
-            List<int> movieIds = new List<int> { };
+            List<int> movieIds = new List<int>();
             List<Film> FilmsToRent;
             if (!NotRentedFilmsExist())
             {
@@ -221,22 +264,53 @@ namespace VideoRentalStoreOOP
 
         #endregion
 
-        #region ShowReceipt, ReturnOverdueFilms
+        #region ShowReceipt, ReturnOverdueFilms, ReturnFilms
+        public void ReturnFilms()
+        {
+            List<Film> FilmsToReturn;
+            Console.WriteLine("Which films do you want to return? ");
+            while (true)
+            {
+                FilmsToReturn = ShowRented();
+                if (FilmsToReturn.Count < 1)
+                {
+                    break;
+                }
+                int movieId = Menus.GetNumberFromUser("Type the number of the film to return it. Type 0 to exit selection", max: FilmsToReturn.Count, min: 0) - 1;
+                if (movieId == -1)
+                {
+                    break;
+                }
+                else
+                {
+                    movieId = Films.IndexOf(FilmsToReturn.ElementAt(movieId));
+                    Films[movieId].DaysRentedFor = 0;
+                }
+            }
+            Console.WriteLine("\nFilms returned");
+
+        }
         public void ReturnOverdueFilms()
         {
-            List<Film> FilmsToReturn = ShowAllOverdueFilms();
-            if (FilmsToReturn.Count < 1)
+            List<Film> OverdueFilmsToReturn = GetAllOverdueFilms();
+
+            if (OverdueFilmsToReturn.Count < 1)
             {
                 Console.WriteLine("No overdue films to return");
                 return;
             }
+
             Console.WriteLine("Your receipt:");
             int totalPrice = 0;
-            foreach (var item in FilmsToReturn)
+
+            foreach (var film in OverdueFilmsToReturn)
             {
-                totalPrice += item.Price;
-                Console.WriteLine(item.Overdue_Info());
+                totalPrice += film.Overdue_Price;
+                Console.WriteLine(film.Overdue_Info());
+                film.DaysOverdue = 0;
+                film.DaysRentedFor = 0;
             }
+
             Console.WriteLine($"Total late charge: {totalPrice} EUR");
         }
         public void ShowReceipt(List<int> movieIds, bool boughtUsingPoints = false)
@@ -245,22 +319,25 @@ namespace VideoRentalStoreOOP
             {
                 return;
             }
+
             Console.WriteLine("Your receipt:");
             int totalPrice = 0;
-            foreach (var item in movieIds)
+
+            foreach (var movieId in movieIds)
             {
-                totalPrice += Films[item].Price;
+                totalPrice += Films[movieId].Price;
                 if (boughtUsingPoints)
                 {
-                    Console.WriteLine(Films[item].General_Info() + $"Rented using {Films[item].DaysRentedFor * 25} points");
-                    Points.Bonus_points -= (Films[item].DaysRentedFor * 25);
+                    Console.WriteLine(Films[movieId].General_Info() + $"Rented using {Films[movieId].DaysRentedFor * Points.PointsForAFreeRental} points");
+                    Points.Bonus_points -= (Films[movieId].DaysRentedFor * 25);
                 }
                 else
                 {
-                    Points.AddPoints(Films[item]);
-                    Console.WriteLine(Films[item].Rent_Info());
+                    Points.AddPoints(Films[movieId]);
+                    Console.WriteLine(Films[movieId].Rent_Info());
                 }
             }
+
             if (!boughtUsingPoints)
             {
                 Console.WriteLine($"Total price : {totalPrice} EUR");
@@ -269,81 +346,122 @@ namespace VideoRentalStoreOOP
         #endregion
 
         #region ShowAllFilms, ShowAllOverdueFilms, ShowAllNotRentedFilms
-        public void ShowAllFilms(bool showId = false)
+        public void ShowAllFilms(bool showId = false, bool showRented = false)
         {
-            if (showId)
+            if (Films.Count < 1)
             {
-                for (int i = 0; i < Films.Count; i++)
+                Console.WriteLine("Inventory is empty");
+                return;
+            }
+
+            for (int i = 0; i < Films.Count; i++)
+            {
+                if (showId)
                 {
                     Console.WriteLine($"{i + 1}: {Films[i].General_Info()}");
                 }
-            }
-            else
-            {
-                if (Films.Count < 1)
+
+                else if (Films[i].DaysRentedFor > 0 && showRented)
                 {
-                    Console.WriteLine("Inventory is empty");
-                    return;
+                    Console.WriteLine($"{i + 1}: {Films[i].Rent_Info()}");
                 }
-                foreach (var item in Films)
+
+                else if (Films[i].DaysRentedFor < 1)
                 {
-                    Console.WriteLine(item.General_Info());
+                    Console.WriteLine(Films[i].Rent_Info());
+                }
+
+                else
+                {
+                    Console.WriteLine(Films[i].General_Info());
                 }
             }
         }
-        public List<Film> ShowAllOverdueFilms()
+        public List<Film> GetAllOverdueFilms()
         {
             List<Film> overdueFilms = new List<Film>();
+
             for (int i = 0; i < Films.Count; i++)
             {
-                if (Films[i].DaysOverdue != 0)
+                if (Films[i].DaysOverdue > 0)
                 {
                     overdueFilms.Add(Films[i]);
                 }
             }
+
             return overdueFilms;
+        }
+        public List<Film> GetAllRentedFilms()
+        {
+            List<Film> rentedFilms = new List<Film>();
+
+            for (int i = 0; i < Films.Count; i++)
+            {
+                if (Films[i].DaysRentedFor > 0 && Films[i].DaysOverdue < 1)
+                {
+                    rentedFilms.Add(Films[i]);
+                }
+            }
+
+            return rentedFilms;
         }
 
         public List<Film> ShowAllNotRentedFilms(bool showId = false)
         {
             List<Film> availableFilms = new List<Film>();
+
             if (!NotRentedFilmsExist())
             {
                 Console.WriteLine("Everything is rented. Try again tomorrow.");
+
                 return availableFilms;
             }
-            if (showId)
+
+
+            for (int i = 0; i < Films.Count; i++)
             {
-                for (int i = 0; i < Films.Count; i++)
+                if (Films[i].DaysRentedFor < 1 && showId)
                 {
-                    if (Films[i].DaysRentedFor < 1)
-                    {
-                        availableFilms.Add(Films[i]);
-                        Console.WriteLine($"{availableFilms.IndexOf(Films[i]) + 1}: {Films[i].Rent_Info()}");
-                    }
+                    availableFilms.Add(Films[i]);
+
+                    Console.WriteLine($"{availableFilms.IndexOf(Films[i]) + 1}: {Films[i].Rent_Info()}");
+                }
+
+                else if (Films[i].DaysRentedFor < 1)
+                {
+                    Console.WriteLine(Films[i].Rent_Info());
                 }
             }
-            else
-            {
-                if (Films.Count < 1)
-                {
-                    Console.WriteLine("Inventory is empty");
-                    return availableFilms;
-                }
-                foreach (var item in Films)
-                {
-                    if (item.DaysRentedFor < 1)
-                    {
-                        Console.WriteLine(item.Rent_Info());
-                    }
-                }
-            }
+
             return availableFilms;
+        }
+        public List<Film> ShowRented()
+        {
+            List<Film> rentedFilms = new List<Film>();
+
+            if (Films.Count < 1)
+            {
+                Console.WriteLine("Nothing to return.");
+                return rentedFilms;
+            }
+
+            for (int i = 0; i < Films.Count; i++)
+            {
+                if (Films[i].DaysRentedFor > 0 && Films[i].DaysOverdue < 1)
+                {
+                    rentedFilms.Add(Films[i]);
+
+                    Console.WriteLine($"{rentedFilms.IndexOf(Films[i]) + 1}: {Films[i].Rent_Info()}");
+                }
+            }
+
+            return rentedFilms;
         }
 
 
         #endregion
-        //checks if there are any films to rent
+
+        //Checks if there are any films to rent
         bool NotRentedFilmsExist()
         {
             for (int i = 0; i < Films.Count; i++)

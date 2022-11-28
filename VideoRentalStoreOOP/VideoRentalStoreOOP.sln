@@ -5,7 +5,12 @@ VisualStudioVersion = 17.3.32929.385
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VideoRentalStoreOOP", "VideoRentalStoreOOP.csproj", "{B0DCEBD8-9623-4CDB-B730-3DCE000E9FCA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoRentalStoreOOPTests", "..\VideoRentalStoreOOPTests1\VideoRentalStoreOOPTests.csproj", "{4F8F652E-07A5-4501-BB71-CB8DF2BD2E4B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VideoRentalStoreOOPTests", "..\VideoRentalStoreOOPTests1\VideoRentalStoreOOPTests.csproj", "{4F8F652E-07A5-4501-BB71-CB8DF2BD2E4B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5D576E79-09C7-44E2-A5EF-B913D92AFC9A}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
